@@ -3,7 +3,7 @@ resource "aws_vpc" "vpc" {
   cidr_block = "10.0.0.0/24"
 
   tags = {
-    Name = "second_lesson_vpc"
+    Name = "handson1_vpc"
   }
 }
 
@@ -76,7 +76,7 @@ resource "aws_nat_gateway" "natgw" {
   depends_on    = [aws_eip.natgw_eip]
 
   tags = {
-    Name = "natgw"
+    Name = "handson1_natgw"
   }
 }
 
@@ -85,7 +85,7 @@ resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.vpc.id
 
   tags = {
-    Name = "second_lesson_igw"
+    Name = "handson1_igw"
   }
 }
 
@@ -192,7 +192,8 @@ data "aws_ami" "amazon-linux-2_ami" {
 }
 
 # launch an EC2 instance:
-resource "aws_instance" "ec2" {
+
+resource "aws_instance" "public_1a_ec2" {
   ami                    = data.aws_ami.amazon-linux-2_ami.id
   instance_type          = "t2.micro"
   subnet_id              = aws_subnet.public-1a.id
@@ -210,5 +211,26 @@ resource "aws_instance" "ec2" {
 
   tags = {
     Name = "public_1a_ec2"
+  }
+}
+
+resource "aws_instance" "public_1b_ec2" {
+  ami                    = data.aws_ami.amazon-linux-2_ami.id
+  instance_type          = "t2.micro"
+  subnet_id              = aws_subnet.public-1b.id
+  key_name               = data.aws_key_pair.my_key.key_name
+  vpc_security_group_ids = [aws_security_group.public-sg.id]
+
+  user_data = <<EOT
+  #!/bin/bash
+  yum update -y
+  yum install httpd -y
+  echo "<h1>Hello World from $(hostname -f)</h1>" > /var/www/html/index.html 
+  systemctl start httpd
+  systemctl enable httpd
+  EOT
+
+  tags = {
+    Name = "public_1b_ec2"
   }
 }
